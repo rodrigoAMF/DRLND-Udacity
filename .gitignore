@@ -1,3 +1,8 @@
+# Environments
+p1_navigation/Banana/
+p2_continuous-control/Reacher_1/
+p2_continuous-control/Reacher_20/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
