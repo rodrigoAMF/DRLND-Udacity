@@ -2,6 +2,7 @@
 p1_navigation/Banana/
 p2_continuous-control/Reacher_1/
 p2_continuous-control/Reacher_20/
+p3_collab-compet/Tennis
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
