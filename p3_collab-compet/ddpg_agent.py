@@ -10,15 +10,19 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 BUFFER_SIZE = int(1e6)  # replay buffer size
-BATCH_SIZE = 512        # minibatch size
+BATCH_SIZE = 1024       # minibatch size
 GAMMA = 0.99            # discount factor
-TAU = 1e-3              # for soft update of target parameters
-LR_ACTOR = 2e-4         # learning rate of the actor 
-LR_CRITIC = 3e-4        # learning rate of the critic
+TAU = 3e-3              # for soft update of target parameters
+LR_ACTOR = 1e-4         # learning rate of the actor 
+LR_CRITIC = 1e-4        # learning rate of the critic
 WEIGHT_DECAY = 0.0001   # L2 weight decay
 
 LEARN_EVERY = 10        # Learning interval
 LEARN_TIMES = 5         # Number of times to call learning function
+
+EPS = 7
+EPS_DECAY = 0.0001
+EPS_MIN = 0
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -56,6 +60,8 @@ class Agent():
 
         # Replay memory
         self.memory = ReplayBuffer(action_size, BUFFER_SIZE, BATCH_SIZE, random_seed)
+        
+        self.eps = EPS
             
     def step(self, state, action, reward, next_state, done, timestep):
         """Save experience in replay memory, and use random sample from buffer to learn."""
@@ -76,7 +82,7 @@ class Agent():
             action = self.actor_local(state).cpu().data.numpy()
         self.actor_local.train()
         if add_noise:
-            action += self.noise.sample()
+            action += self.eps * self.noise.sample()
         return np.clip(action, -1, 1)
 
     def reset(self):
@@ -121,7 +127,11 @@ class Agent():
 
         # ----------------------- update target networks ----------------------- #
         self.soft_update(self.critic_local, self.critic_target, TAU)
-        self.soft_update(self.actor_local, self.actor_target, TAU)                     
+        self.soft_update(self.actor_local, self.actor_target, TAU)
+        
+        self.eps -= EPS_DECAY
+        if self.eps < EPS_MIN:
+            self.eps = EPS_MIN
 
     def soft_update(self, local_model, target_model, tau):
         """Soft update model parameters.
@@ -139,7 +149,7 @@ class Agent():
 class OUNoise:
     """Ornstein-Uhlenbeck process."""
 
-    def __init__(self, size, seed, mu=0., theta=0.05, sigma=0.10):
+    def __init__(self, size, seed, mu=0., theta=0.15, sigma=0.10):
         """Initialize parameters and noise process."""
         self.mu = mu * np.ones(size)
         self.size = size
